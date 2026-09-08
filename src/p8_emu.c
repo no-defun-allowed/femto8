@@ -34,11 +34,15 @@
 
 #ifdef SDL
 #include "SDL.h"
+#elif defined(__fioxa__)
+extern void gfx_setup(void);
+extern void gfx_draw_image(uint32_t*, unsigned int, unsigned int);
+extern void gfx_destroy(void);
 #else
 #include "gdi.h"
 #endif
 
-#ifdef SDL
+#if defined(SDL) || defined(__fioxa__)
 // ARGB
 uint32_t m_colors[32] = {
     0x00000000, 0x001d2b53, 0x007e2553, 0x00008751, 0x00ab5236, 0x005f574f, 0x00c2c3c7, 0x00fff1e8,
@@ -96,6 +100,11 @@ SDL_Renderer *m_renderer = NULL;
 SDL_Texture *m_texture = NULL;
 SDL_Surface *m_output = NULL;
 SDL_PixelFormat *m_format = NULL;
+#elif defined(__fioxa__)
+struct {
+  uint32_t *pixels;
+  uint32_t *resized;
+} *m_output;
 #else
 SemaphoreHandle_t m_drawSemaphore;
 #endif
@@ -191,6 +200,12 @@ int p8_init()
 
     SDL_SetWindowTitle(m_window, "femto-8");
 #endif
+#ifdef __fioxa__
+    gfx_setup();
+    m_output = malloc(sizeof(*m_output));
+    m_output->pixels = malloc(P8_WIDTH * P8_HEIGHT * sizeof(uint32_t));
+    m_output->resized = malloc(SCREEN_WIDTH * SCREEN_HEIGHT * sizeof(uint32_t));
+#endif
 #ifdef OS_FREERTOS
     m_drawSemaphore = xSemaphoreCreateBinary();
 
@@ -242,7 +257,7 @@ int p8_init()
 
 static int p8_init_lcd(void)
 {
-#ifndef SDL
+#ifdef __DA1470x__
     gdi_set_layer_start(HW_LCDC_LAYER_0, 0, 0);
 
     gdi_set_layer_enable(HW_LCDC_LAYER_0, true);
@@ -378,6 +393,8 @@ int p8_shutdown()
     if (m_window) { SDL_DestroyWindow(m_window); m_window = NULL; }
     if (m_output) { SDL_FreeSurface(m_output); m_output = NULL; }
     SDL_Quit();
+#elif defined(__fioxa__)
+    gfx_destroy();
 #endif
 
     free(m_cart_memory);
@@ -401,7 +418,7 @@ int p8_shutdown()
     return 0;
 }
 
-#ifdef SDL
+#if defined(SDL) || defined(__fioxa__)
 // Map output pixel (ox, oy) to source framebuffer pixel (sx, sy) based on
 // the screen transform mode at 0x5f2c.
 static void screen_transform_pixel(uint8_t mode, int ox, int oy, int *sx, int *sy)
@@ -537,8 +554,8 @@ void p8_render()
         }
     }
 
-    SDL_Rect rectDest = {0, 0, SCREEN_WIDTH, SCREEN_HEIGHT};
 #ifdef SDL
+    SDL_Rect rectDest = {0, 0, SCREEN_WIDTH, SCREEN_HEIGHT};
     if (m_texture && m_renderer) {
         SDL_UpdateTexture(m_texture, NULL, m_output->pixels, m_output->pitch);
         SDL_RenderClear(m_renderer);
@@ -546,7 +563,12 @@ void p8_render()
         SDL_RenderPresent(m_renderer);
     }
 #else
-    (void)rectDest;
+    for (int y = 0; y < P8_HEIGHT; y++)
+      for (int x = 0; x < P8_HEIGHT; x++)
+        for (int py = 0; py < 4; py++)
+          for (int px = 0; px < 4; px++)
+            m_output->resized[SCREEN_WIDTH * ((4 * y) + py) + (4 * x) + px] = m_output->pixels[P8_WIDTH * y + x];
+    gfx_draw_image(m_output->resized, SCREEN_WIDTH, SCREEN_HEIGHT);
 #endif
 }
 #else

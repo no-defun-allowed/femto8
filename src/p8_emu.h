@@ -24,8 +24,10 @@
 #ifdef __DA1470x__
 #define OS_FREERTOS
 #else
+#ifndef __fioxa__
 #define SDL
 #define ENABLE_AUDIO
+#endif
 #endif
 
 #ifndef CARTDATA_PATH

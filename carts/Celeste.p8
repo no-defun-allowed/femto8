@@ -2,7 +2,7 @@ pico-8 cartridge // http://www.pico-8.com
 version 5
 __lua__
 -- ~celeste~
--- matt thorson + noel berry
+-- maddy thorson + noel berry
 
 -- globals --
 -------------
@@ -1326,7 +1326,7 @@ function _draw()
 	-- credits
 	if is_title() then
 		print("x+c",58,80,5)
-		print("matt thorson",42,96,5)
+		print("maddy thorson",42,96,5)
 		print("noel berry",46,102,5)
 	end
 	

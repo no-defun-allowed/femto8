@@ -100,6 +100,7 @@ static void clear_input_queue(void)
     m_mouse_click_mod = 0;
 }
 
+#ifdef SDL
 static void queue_keypress(unsigned scancode, uint8_t keychar, unsigned mod)
 {
     if (is_modifier(scancode))
@@ -122,6 +123,7 @@ static void queue_mouse_click(int buttons, int x, int y, unsigned mod)
     m_mouse_click_y = y;
     m_mouse_click_mod = mod;
 }
+#endif
 
 bool p8_get_next_keypress(unsigned *scancode, uint8_t *keychar, unsigned *mod)
 {

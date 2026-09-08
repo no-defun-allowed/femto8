@@ -1,0 +1,9 @@
+# no SDL lol
+SDL_CFLAGS := 
+SDL_LIBS   := 
+
+DEFINES += -DLUA_USE_POSIX
+fpic := -fPIC
+
+LIBS += $(SDL_LIBS) -lpthread -lm
+CC := x86_64-fioxa-gcc

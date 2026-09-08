@@ -10,6 +10,8 @@
   #include <malloc/malloc.h>
 #elif defined(__OpenBSD__)
   #include <stdlib.h>
+#elif defined(__fioxa__)
+  #include <stdlib.h>
 #else
   #include <malloc.h>
 #endif
