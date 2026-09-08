@@ -49,13 +49,12 @@ uint16_t m_buttons[PLAYER_COUNT];
 uint16_t m_buttonsp[PLAYER_COUNT];
 static uint16_t m_button_first_repeat[PLAYER_COUNT];
 static unsigned m_button_down_time[PLAYER_COUNT][BUTTON_INTERNAL_COUNT];
-#ifdef SDL
+#if defined(SDL) || defined(__fioxa__)
 static uint16_t m_buttons_latch[PLAYER_COUNT];
 #endif
 
 static bool m_prev_pointer_lock;
 
-#ifdef SDL
 static void update_buttons(int index, int button, bool state)
 {
     uint16_t mask = m_buttons[index];
@@ -65,7 +64,6 @@ static void update_buttons(int index, int button, bool state)
     if (state)
         m_buttons_latch[index] |= (1 << button);
 }
-#endif
 
 bool p8_is_key_down(unsigned scancode)
 {
@@ -100,7 +98,6 @@ static void clear_input_queue(void)
     m_mouse_click_mod = 0;
 }
 
-#ifdef SDL
 static void queue_keypress(unsigned scancode, uint8_t keychar, unsigned mod)
 {
     if (is_modifier(scancode))
@@ -123,7 +120,6 @@ static void queue_mouse_click(int buttons, int x, int y, unsigned mod)
     m_mouse_click_y = y;
     m_mouse_click_mod = mod;
 }
-#endif
 
 bool p8_get_next_keypress(unsigned *scancode, uint8_t *keychar, unsigned *mod)
 {
@@ -161,6 +157,10 @@ bool p8_has_pending_keypress(void)
 
 void p8_init_input(void)
 {
+#ifdef __fioxa__
+  extern void keyboard_setup(void);
+  keyboard_setup();
+#endif
     p8_reset_input();
 }
 
@@ -413,6 +413,23 @@ void p8_update_input()
         default:
             break;
         }
+    }
+#elif defined(__fioxa__)
+    struct poll_result { uint8_t state; uint32_t key; };
+    extern struct poll_result keyboard_poll();
+    struct poll_result poll;
+    for (;;) {
+      poll = keyboard_poll();
+      if (poll.state == 0) break;
+      switch (poll.key) {
+      case INPUT_LEFT: update_buttons(0, BUTTON_LEFT, poll.state == 1); break;
+      case INPUT_UP: update_buttons(0, BUTTON_UP, poll.state == 1); break;
+      case INPUT_RIGHT: update_buttons(0, BUTTON_RIGHT, poll.state == 1); break;
+      case INPUT_DOWN: update_buttons(0, BUTTON_DOWN, poll.state == 1); break;
+      case INPUT_ESCAPE: update_buttons(0, BUTTON_ESCAPE, poll.state == 1); break;
+      case INPUT_ACTION1: update_buttons(0, BUTTON_ACTION1, poll.state == 1); break;
+      case INPUT_ACTION2: update_buttons(0, BUTTON_ACTION2, poll.state == 1); break;
+      }
     }
 #elif defined(OS_FREERTOS)
     uint16_t mask = 0;

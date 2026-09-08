@@ -23,6 +23,13 @@
 #define INPUT_ESCAPE SDLK_ESCAPE
 #define NUM_SCANCODES 512
 #else
+#define INPUT_LEFT 0x2190
+#define INPUT_UP 0x2191
+#define INPUT_RIGHT 0x2192
+#define INPUT_DOWN 0x2193
+#define INPUT_ACTION1 'X'
+#define INPUT_ACTION2 'C'
+#define INPUT_ESCAPE 0x1B
 #define NUM_SCANCODES 256
 #endif
 
