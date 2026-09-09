@@ -335,6 +335,13 @@ static void convert_utf8_to_p8scii(uint8_t *buffer, size_t len)
     *write_ptr = '\0';
 }
 
+unsigned int hex_to_nibble(char c) {
+  if ('0' <= c && c <= '9') return c - '0';
+  if ('A' <= c && c <= 'F') return 10 + c - 'A';
+  if ('a' <= c && c <= 'f') return 10 + c - 'a';
+  abort();
+}
+
 void hex_to_bytes(uint8_t *memory, char *str, int str_len, int *write_length)
 {
     *write_length = 0;
@@ -355,8 +362,7 @@ void hex_to_bytes(uint8_t *memory, char *str, int str_len, int *write_length)
             read_offset++;
             continue;
         }
-        unsigned int v;
-        sscanf(str + read_offset, "%2x", &v);
+        unsigned int v = hex_to_nibble(str[read_offset]) << 4 | hex_to_nibble(str[read_offset + 1]);
         memory[write_offset] = (uint8_t)v;
         read_offset += 2;
         write_offset++;
@@ -495,7 +501,6 @@ static int parse_p8_ram(const char *file_name, uint8_t *buffer, int size, uint8_
             }
             continue;
         }
-
         switch (p8_type)
         {
         case P8TYPE_LUA:
