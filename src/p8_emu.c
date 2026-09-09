@@ -103,7 +103,6 @@ SDL_PixelFormat *m_format = NULL;
 #elif defined(__fioxa__)
 struct {
   uint32_t *pixels;
-  uint32_t *resized;
 } *m_output;
 #else
 SemaphoreHandle_t m_drawSemaphore;
@@ -204,7 +203,6 @@ int p8_init()
     gfx_setup();
     m_output = malloc(sizeof(*m_output));
     m_output->pixels = malloc(P8_WIDTH * P8_HEIGHT * sizeof(uint32_t));
-    m_output->resized = malloc(SCREEN_WIDTH * SCREEN_HEIGHT * sizeof(uint32_t));
 #endif
 #ifdef OS_FREERTOS
     m_drawSemaphore = xSemaphoreCreateBinary();
@@ -563,12 +561,7 @@ void p8_render()
         SDL_RenderPresent(m_renderer);
     }
 #else
-    for (int y = 0; y < P8_HEIGHT; y++)
-      for (int x = 0; x < P8_HEIGHT; x++)
-        for (int py = 0; py < 4; py++)
-          for (int px = 0; px < 4; px++)
-            m_output->resized[SCREEN_WIDTH * ((4 * y) + py) + (4 * x) + px] = m_output->pixels[P8_WIDTH * y + x];
-    gfx_draw_image(m_output->resized, SCREEN_WIDTH, SCREEN_HEIGHT);
+    gfx_draw_image_scaled(m_output->resized, P8_WIDTH, P8_HEIGHT, 4);
 #endif
 }
 #else
